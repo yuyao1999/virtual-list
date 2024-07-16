@@ -31,7 +31,7 @@ class yyElement extends LitElement {
       return value
     },
   })
-  request = async (page: number, size: number) => {}
+  request = async (_page: number, _size: number) => {}
 
   @property({ type: String })
   loadingText = "加载中~"
@@ -109,7 +109,7 @@ class yyElement extends LitElement {
 
   changeVisibleData() {
     this.visibleData = this.listDataKey.slice(this.start, this.end)
-    this.dispatchEvent(new CustomEvent("virtualListChange", { detail: this.visibleData }))
+    this.dispatchEvent(new CustomEvent("change", { detail: this.visibleData }))
   }
 
   @state()
@@ -302,3 +302,4 @@ class yyElement extends LitElement {
     }
   `
 }
+export { yyElement }

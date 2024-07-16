@@ -1,0 +1,54 @@
+<!-- @format -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module" src="/src/index.ts"></script>
+  </head>
+
+  <body>
+    <div onclick="reload()">reload</div>
+    <yy-virtual-list estimatedItemSize="50">
+      <yy-template>
+        <style>
+          :root{ --containerHeight:30vh; } .card{ padding:1rem;box-size;color:#fff} .te { color: red; }
+                   .inner{background:#3C3C3C} strong{word-wrap:break-word;}
+        </style>
+        <div class="card">
+          <div class="inner">
+            <strong>${this.index}</strong>
+            <strong>${this.name}</strong>
+            is
+            <div class="te">${this.email}</div>
+          </div>
+        </div>
+      </yy-template>
+    </yy-virtual-list>
+  </body>
+  <script>
+    const fetchPackageInfo = async (page, size) => {
+      console.log("page", page)
+      const response = await fetch(`https://registry.npmjs.org/lit`)
+      const res = await response.json()
+      console.log("res", res)
+      return res.maintainers.map((item, index) => {
+        return {
+          ...item,
+          index: page,
+        }
+      })
+    }
+    const el = document.getElementsByTagName("yy-virtual-list")[0]
+    console.log("el", el)
+    // 添加自定义属性 request
+    el.setAttribute("request", fetchPackageInfo)
+
+    const reload = () => {
+      console.log("reload")
+      el.reload()
+    }
+  </script>
+</html>

@@ -1,8 +1,12 @@
 {
   "name": "yy-virtual-list",
-  "version": "0.9.0",
+  "version": "0.9.4",
   "type": "module",
-  "main": "src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
