@@ -1,7 +1,16 @@
 {
   "name": "yy-virtual-list",
-  "version": "0.9.4",
+  "version": "0.9.6",
   "type": "module",
+  "author": "yy",
+  "description": "web components virtual list",
+  "keywords": [
+    "web components",
+    "virtual list",
+    "Lit",
+    "vue",
+    "react"
+  ],
   "files": [
     "dist"
   ],

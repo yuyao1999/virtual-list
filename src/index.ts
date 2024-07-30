@@ -4,19 +4,11 @@ import { LitElement, css, html } from "lit"
 import { customElement, state, property } from "lit/decorators.js"
 import { unsafeHTML } from "lit/directives/unsafe-html.js"
 import { ref, createRef } from "lit/directives/ref.js"
+import { styleMap } from "lit/directives/style-map.js"
 
 @customElement("yy-virtual-list")
-class yyElement extends LitElement {
+export class yyElement extends LitElement {
   @property({ type: Number })
-  estimatedItemSize = 50
-
-  @state()
-  templateStr = ""
-
-  @state()
-  listData = [] as any
-
-  @state()
   page = 1
 
   @property({ type: Number })
@@ -33,17 +25,30 @@ class yyElement extends LitElement {
   })
   request = async (_page: number, _size: number) => {}
 
-  @property({ type: String })
-  loadingText = "加载中~"
+  @property({ type: Boolean, attribute: "built-in" })
+  builtIn = false
 
-  @property({ type: Boolean }) isPagination = true
+  // 容器高度
+  @property({ type: String, attribute: "container-styles-string" })
+  containerStylesString = "height:50vh;background:#f5f5f5;margin:1rem;"
+
   @state() loading = false
   @state() hasMoreData = true
+
+  @state()
+  estimatedItemSize = 50
+
+  @state()
+  templateStr = ""
+
+  @state()
+  listData = [] as any
 
   async loadDataList() {
     this.loading = true
     const data: any = await this.request(this.page, this.size)
     if (data?.length === 0) {
+      this.loading = false
       this.hasMoreData = false
       return
     }
@@ -97,7 +102,6 @@ class yyElement extends LitElement {
     // 重新加载列表
     this.positions = []
     this.listData = []
-    this.start = 1
     this.page = 1
     this.listRef.value.scrollTo({ top: 0 })
     this.loadDataList()
@@ -135,6 +139,7 @@ class yyElement extends LitElement {
   itemsRef = createRef<any>()
 
   firstUpdated() {
+    this.initStyle()
     this.loadDataList()
     this.init()
   }
@@ -146,6 +151,17 @@ class yyElement extends LitElement {
     this.end = this.visibleCount
     this.changeVisibleData()
     this.getPositions()
+  }
+
+  @state()
+  containerStyles = {} as any
+
+  initStyle() {
+    const arr = this.containerStylesString.trim().split(";").filter(Boolean)
+    for (const item of arr) {
+      const [key, value] = item.split(":")
+      this.containerStyles[key.trim()] = value.trim()
+    }
   }
 
   fillTemplate(templateString: string, templateVars: any) {
@@ -214,9 +230,10 @@ class yyElement extends LitElement {
       nodes = slots
     }
     for (const node of nodes) {
-      if (!node?.getBoundingClientRect) continue
       let rect = node.getBoundingClientRect()
+      if (!rect.height) continue
       let height = rect.height
+
       let index = +node.id.slice(1)
       let oldHeight = this.positions[index]?.height
       let dValue = oldHeight - height
@@ -235,6 +252,9 @@ class yyElement extends LitElement {
   updated() {
     //获取真实元素大小，修改对应的尺寸缓存
     this.updateItemsSize()
+    if (this.estimatedItemSize === 50 && this.positions[0]?.height) {
+      this.estimatedItemSize = this.positions[0].height
+    }
     const height = this.positions[this.positions.length - 1]?.bottom
     this.phantomRef.value.style.height = height + "px"
     //更新真实偏移量
@@ -242,12 +262,13 @@ class yyElement extends LitElement {
   }
 
   render() {
-    const template = this.querySelector("yy-template")!
-    this.templateStr = template?.innerHTML || ""
+    if (this.builtIn) {
+      const template = this.querySelector("yy-template")!
+      this.templateStr = template?.innerHTML || ""
+    }
     return html`
-      <div>${this.listData.length}</div>
-      <div>${this.start}-${this.end}</div>
-      <div class="infinite-list-container" ${ref(this.listRef)} id="list" @scroll="${this.scrollEvent}">
+      <!-- <div >${html`${this.start}-${this.end}`}</div> -->
+      <div class="infinite-list-container" style=${styleMap(this.containerStyles)} ${ref(this.listRef)} id="list" @scroll="${this.scrollEvent}">
         <div class="infinite-list-phantom" ${ref(this.phantomRef)}></div>
         <div class="infinite-list" ${ref(this.contentRef)}>
           ${html`
@@ -257,7 +278,16 @@ class yyElement extends LitElement {
                 )
               : html`<slot></slot>`}
           `}
-          <div class="no-more">${this.hasMoreData ? "" : "没有更多数据了"}</div>
+          ${this.loading
+            ? html`<slot name="loading">
+                <div class="loading">正在加载中~</div>
+              </slot>`
+            : null}
+          ${!this.hasMoreData
+            ? html`<slot name="loaded">
+                <div class="loaded">没有更多数据了~</div>
+              </slot>`
+            : null}
         </div>
       </div>
     `
@@ -268,8 +298,6 @@ class yyElement extends LitElement {
       overflow: auto;
       position: relative;
       -webkit-overflow-scrolling: touch;
-      height: var(--containerHeight, 200px);
-      border: 1px #000 solid;
     }
 
     .infinite-list-phantom {
@@ -279,12 +307,17 @@ class yyElement extends LitElement {
       right: 0;
       z-index: -1;
     }
-
     .infinite-list {
       left: 0;
       right: 0;
       top: 0;
       position: absolute;
+    }
+    .loaded {
+      color: #999;
+      font-size: 1.1rem;
+      text-align: center;
+      padding: 1rem;
     }
     @keyframes blink {
       0% {
@@ -302,4 +335,3 @@ class yyElement extends LitElement {
     }
   `
 }
-export { yyElement }
