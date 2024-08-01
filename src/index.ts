@@ -1,12 +1,12 @@
 /** @format */
 
-import { LitElement, css, html } from "lit"
-import { customElement, state, property } from "lit/decorators.js"
-import { unsafeHTML } from "lit/directives/unsafe-html.js"
-import { ref, createRef } from "lit/directives/ref.js"
-import { styleMap } from "lit/directives/style-map.js"
+import { LitElement, css, html } from 'lit'
+import { customElement, state, property } from 'lit/decorators.js'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
+import { ref, createRef } from 'lit/directives/ref.js'
+import { styleMap } from 'lit/directives/style-map.js'
 
-@customElement("yy-virtual-list")
+@customElement('yy-virtual-list')
 export class yyElement extends LitElement {
   //缓冲个数
   @property({ type: Number })
@@ -21,36 +21,29 @@ export class yyElement extends LitElement {
   @property({
     converter: (value: any) => {
       // 字符串转函数
-      if (typeof value === "string") {
-        return new Function("return " + value)()
+      if (typeof value === 'string') {
+        return new Function('return ' + value)()
       }
       return value
     },
   })
   request = async (_page: number, _size: number) => {}
 
-  @property({ type: Boolean, attribute: "built-in" })
+  @property({ type: Boolean, attribute: 'built-in' })
   builtIn = false
 
   // 容器高度
-  @property({ type: String, attribute: "container-styles-string" })
-  containerStylesString = "height:50vh;background:#f5f5f5;margin:1rem;"
+  @property({ type: String, attribute: 'container-styles-string' })
+  containerStylesString = 'height:50vh;background:#f5f5f5;margin:1rem;'
 
-  @property({ type: Number, attribute: "estimated-height" })
-  estimatedHeight = 50
-
-  @property({ type: Boolean, attribute: "height-fixed" })
-  heightFixed = false
-
-  @state()
-  loading = false
+  @state() loading = false
   @state() hasMoreData = true
 
   @state()
   estimatedItemSize = 50
 
   @state()
-  templateStr = ""
+  templateStr = ''
 
   @state()
   listData = [] as any
@@ -118,6 +111,7 @@ export class yyElement extends LitElement {
 
   reload() {
     // 重新加载列表
+    this.hasMoreData = true
     this.positions = []
     this.listData = []
     this.page = 1
@@ -131,7 +125,7 @@ export class yyElement extends LitElement {
 
   changeVisibleData() {
     this.visibleData = this.listDataKey.slice(this.start, this.end)
-    this.dispatchEvent(new CustomEvent("change", { detail: this.visibleData }))
+    this.dispatchEvent(new CustomEvent('change', { detail: this.visibleData }))
   }
 
   @state()
@@ -160,7 +154,6 @@ export class yyElement extends LitElement {
     this.initStyle()
     this.loadDataList()
     this.init()
-    this.estimatedItemSize = this.estimatedHeight
   }
 
   init() {
@@ -176,16 +169,16 @@ export class yyElement extends LitElement {
   containerStyles = {} as any
 
   initStyle() {
-    const arr = this.containerStylesString.trim().split(";").filter(Boolean)
+    const arr = this.containerStylesString.trim().split(';').filter(Boolean)
     for (const item of arr) {
-      const [key, value] = item.split(":")
+      const [key, value] = item.split(':')
       this.containerStyles[key.trim()] = value.trim()
     }
   }
 
   fillTemplate(templateString: string, templateVars: any) {
     const resTemp = decodeURIComponent(templateString)
-    return new Function("return `" + resTemp + "`;").call(templateVars)
+    return new Function('return `' + resTemp + '`;').call(templateVars)
   }
 
   getStartIndex = (scrollTop: number = 0) => {
@@ -241,7 +234,6 @@ export class yyElement extends LitElement {
     this.handleRequestMore(scrollTop)
   }
   updateItemsSize() {
-    if (this.heightFixed) return
     let nodes = this.contentRef.value!.children || []
     if (!this.templateStr) {
       //将slot 内容作为模板
@@ -277,28 +269,37 @@ export class yyElement extends LitElement {
     //获取真实元素大小，修改对应的尺寸缓存
     this.updateItemsSize()
     const height = this.positions[this.positions.length - 1]?.bottom
-    this.phantomRef.value.style.height = height + "px"
+    this.phantomRef.value.style.height = height + (this.tipsRef.value.clientHeight || 0) + 'px'
     //更新真实偏移量
     this.setStartOffset()
-    if (this.estimatedItemSize === this.estimatedHeight && this.positions[0]?.height) {
+    if (this.estimatedItemSize === 50 && this.positions[0]?.height) {
       this.estimatedItemSize = this.positions[0].height
     }
   }
 
   render() {
     if (this.builtIn) {
-      const template = this.querySelector("yy-template")!
-      this.templateStr = template?.innerHTML || ""
+      const template = this.querySelector('yy-template')!
+      this.templateStr = template?.innerHTML || ''
     }
     return html`
-      <!-- <div>${html`${this.start}-${this.end}`}</div> -->
-      <div class="infinite-list-container" style=${styleMap(this.containerStyles)} ${ref(this.listRef)} id="list" @scroll="${this.scrollEvent}">
+      <div>${html`${this.start}-${this.end}`}</div>
+      <div
+        class="infinite-list-container"
+        style=${styleMap(this.containerStyles)}
+        ${ref(this.listRef)}
+        id="list"
+        @scroll="${this.scrollEvent}"
+      >
         <div class="infinite-list-phantom" ${ref(this.phantomRef)}></div>
         <div class="infinite-list" ${ref(this.contentRef)}>
           ${html`
             ${this.templateStr
               ? this.visibleData.map(
-                  (item: any) => html`<div ${ref(this.itemsRef)} .id="${item._index}">${unsafeHTML(this.fillTemplate(this.templateStr, item))}</div>`
+                  (item: any) =>
+                    html`<div ${ref(this.itemsRef)} .id="${item._index}">
+                      ${unsafeHTML(this.fillTemplate(this.templateStr, item))}
+                    </div>`
                 )
               : html`<slot></slot>`}
           `}
@@ -346,23 +347,11 @@ export class yyElement extends LitElement {
     }
     .loaded {
       color: #999;
-      font-size: 1.1rem;
       text-align: center;
-      padding: 1rem;
-    }
-    @keyframes blink {
-      0% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-      }
     }
     .loading {
-      font-size: 1.5rem;
       text-align: center;
-      /* 动画闪烁 */
-      animation: blink 1s linear infinite;
+      color: #999;
     }
   `
 }
