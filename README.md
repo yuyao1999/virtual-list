@@ -2,13 +2,16 @@
 
 ## Component properties
 
-| property                | explain                               | type     | default                                     |
-| ----------------------- | ------------------------------------- | -------- | ------------------------------------------- |
-| page                    | page number                           | number   | 1                                           |
-| size                    | pageSize                              | number   | 10                                          |
-| request                 | getting data                          | Function | ()=>{}                                      |
-| built-in                | Whether to use built-in list notation | boolean  | false                                       |
-| container-styles-string | Container css Styles                  | string   | height:50vh;background:#f5f5f5;margin:1rem; |
+| property                | explain                                                                                                                     | type     | default                                     |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------- |
+| estimated-height        | estimate the height of each item                                                                                            | number   | 50                                          |
+| height-fixed            | whether the height of each item is fixed? If true, the true height will not be obtained. The estimated-height shall prevail | number   | false                                       |
+| buffer                  | number of virtual list buffers                                                                                              | number   | 4                                           |
+| page                    | page number                                                                                                                 | number   | 1                                           |
+| size                    | pageSize                                                                                                                    | number   | 10                                          |
+| request                 | getting data                                                                                                                | Function | ()=>{}                                      |
+| built-in                | Whether to use built-in list notation                                                                                       | boolean  | false                                       |
+| container-styles-string | Container css Styles                                                                                                        | string   | height:50vh;background:#f5f5f5;margin:1rem; |
 
 ## Component slots
 
@@ -16,6 +19,7 @@
 | --------- | ------------ |
 | loading   | data loading |
 | loaded    | data loaded  |
+| empty     | data empty   |
 
 ## Component method
 

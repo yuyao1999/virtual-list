@@ -8,6 +8,10 @@ import { styleMap } from "lit/directives/style-map.js"
 
 @customElement("yy-virtual-list")
 export class yyElement extends LitElement {
+  //缓冲个数
+  @property({ type: Number })
+  buffer = 4
+
   @property({ type: Number })
   page = 1
 
@@ -32,7 +36,14 @@ export class yyElement extends LitElement {
   @property({ type: String, attribute: "container-styles-string" })
   containerStylesString = "height:50vh;background:#f5f5f5;margin:1rem;"
 
-  @state() loading = false
+  @property({ type: Number, attribute: "estimated-height" })
+  estimatedHeight = 50
+
+  @property({ type: Boolean, attribute: "height-fixed" })
+  heightFixed = false
+
+  @state()
+  loading = false
   @state() hasMoreData = true
 
   @state()
@@ -44,6 +55,7 @@ export class yyElement extends LitElement {
   @state()
   listData = [] as any
 
+  tipsRef = createRef<any>()
   async loadDataList() {
     this.loading = true
     const data: any = await this.request(this.page, this.size)
@@ -56,12 +68,18 @@ export class yyElement extends LitElement {
     if (this.page === 1) {
       this.init()
     } else {
+      this.getPositions()
       this.changeListDataKey()
       this.changeVisibleCount()
       this.changeVisibleData()
-      this.getPositions()
     }
+
+    let startOffset = this.start >= 1 ? this.positions[this.start - 1]?.bottom : 0
+    startOffset = startOffset + this.tipsRef.value.clientHeight
+    this.contentRef.value.style.transform = `translate3d(0,${startOffset}px,0)`
+
     this.loading = false
+
     return data
   }
 
@@ -142,13 +160,14 @@ export class yyElement extends LitElement {
     this.initStyle()
     this.loadDataList()
     this.init()
+    this.estimatedItemSize = this.estimatedHeight
   }
 
   init() {
     this.screenHeight = this.listRef.value?.clientHeight || 0
     this.changeListDataKey()
     this.changeVisibleCount()
-    this.end = this.visibleCount
+    this.end = this.visibleCount + this.buffer * 2
     this.changeVisibleData()
     this.getPositions()
   }
@@ -170,7 +189,8 @@ export class yyElement extends LitElement {
   }
 
   getStartIndex = (scrollTop: number = 0) => {
-    return this.binarySearch(this.positions, scrollTop)
+    const index = this.binarySearch(this.positions, scrollTop) || 0
+    return index < this.buffer ? 0 : index - this.buffer
   }
   binarySearch = (list: any[], value: number) => {
     let start = 0
@@ -214,24 +234,26 @@ export class yyElement extends LitElement {
     //此时的开始索引
     this.start = this.getStartIndex(scrollTop) || 0
     //此时的结束索引
-    this.end = this.start + this.visibleCount
+    this.end = this.start + this.visibleCount + this.buffer * 2
     this.changeVisibleData()
     //此时的偏移量
     this.setStartOffset()
     this.handleRequestMore(scrollTop)
   }
   updateItemsSize() {
+    if (this.heightFixed) return
     let nodes = this.contentRef.value!.children || []
     if (!this.templateStr) {
+      //将slot 内容作为模板
       const slots = []
       for (const node of nodes) {
+        // 只要 slot 没有name的
         node?.assignedNodes && slots.push(...node.assignedNodes())
       }
       nodes = slots
     }
-
     for (const node of nodes) {
-      if (!node || !node?.getBoundingClientRect) return
+      if (!node || !node?.getBoundingClientRect) continue
       let rect = node.getBoundingClientRect()
       if (!rect.height) continue
       let height = rect.height
@@ -254,13 +276,13 @@ export class yyElement extends LitElement {
   updated() {
     //获取真实元素大小，修改对应的尺寸缓存
     this.updateItemsSize()
-    if (this.estimatedItemSize === 50 && this.positions[0]?.height) {
-      this.estimatedItemSize = this.positions[0].height
-    }
     const height = this.positions[this.positions.length - 1]?.bottom
     this.phantomRef.value.style.height = height + "px"
     //更新真实偏移量
     this.setStartOffset()
+    if (this.estimatedItemSize === this.estimatedHeight && this.positions[0]?.height) {
+      this.estimatedItemSize = this.positions[0].height
+    }
   }
 
   render() {
@@ -269,7 +291,7 @@ export class yyElement extends LitElement {
       this.templateStr = template?.innerHTML || ""
     }
     return html`
-      <!-- <div >${html`${this.start}-${this.end}`}</div> -->
+      <!-- <div>${html`${this.start}-${this.end}`}</div> -->
       <div class="infinite-list-container" style=${styleMap(this.containerStyles)} ${ref(this.listRef)} id="list" @scroll="${this.scrollEvent}">
         <div class="infinite-list-phantom" ${ref(this.phantomRef)}></div>
         <div class="infinite-list" ${ref(this.contentRef)}>
@@ -280,16 +302,23 @@ export class yyElement extends LitElement {
                 )
               : html`<slot></slot>`}
           `}
-          ${this.loading
-            ? html`<slot name="loading">
-                <div class="loading">正在加载中~</div>
-              </slot>`
-            : null}
-          ${!this.hasMoreData
-            ? html`<slot name="loaded">
-                <div class="loaded">没有更多数据了~</div>
-              </slot>`
-            : null}
+          <div ${ref(this.tipsRef)}>
+            ${this.loading
+              ? html`<slot name="loading">
+                  <div class="loading">正在加载中~</div>
+                </slot>`
+              : null}
+            ${!this.hasMoreData && this.page !== 1
+              ? html`<slot name="loaded">
+                  <div class="loaded">没有更多数据了~</div>
+                </slot>`
+              : null}
+            ${!this.hasMoreData && this.page === 1
+              ? html`<slot name="empty">
+                  <div class="loaded">没有数据~</div>
+                </slot>`
+              : null}
+          </div>
         </div>
       </div>
     `
