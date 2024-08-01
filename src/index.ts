@@ -229,7 +229,9 @@ export class yyElement extends LitElement {
       }
       nodes = slots
     }
+
     for (const node of nodes) {
+      if (!node || !node?.getBoundingClientRect) return
       let rect = node.getBoundingClientRect()
       if (!rect.height) continue
       let height = rect.height

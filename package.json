@@ -1,6 +1,6 @@
 {
   "name": "yy-virtual-list",
-  "version": "0.9.6",
+  "version": "0.9.8",
   "type": "module",
   "author": "yy",
   "description": "web components virtual list",

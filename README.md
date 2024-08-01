@@ -29,17 +29,12 @@
 ## vue
 
 ```
+<!-- @format -->
+
 <template>
   <div class="demo">
     <div @click="onReload">reload</div>
-    <yy-virtual-list
-      id="virtualListId"
-      ref="yyEl"
-      :estimatedItemSize="192"
-      @change="virtualListChange"
-      :request="fetchDemo"
-      style="--containerHeight: 50vh"
-    >
+    <yy-virtual-list id="virtualListId" ref="yyEl" :estimatedItemSize="192" @change="virtualListChange" :request="fetchDemo" style="--containerHeight: 50vh">
       <div class="card" v-for="item in virtualList" :key="item._index" :id="item._index">
         <div class="inner">
           <div>{{ item.index }}</div>
@@ -52,23 +47,23 @@
 </template>
 
 <script setup lang="ts">
-import {  ref } from "vue"
+import { ref } from "vue"
 import "yy-virtual-list"
 
 const fetchDemo = async (page: number, size: number) => {
   return new Promise((resolve) => {
-        setTimeout(() => {
-          const data = []
-          for (let i = 0; i < size; i++) {
-            data.push({
-              index: (page - 1) * size + i + 1,
-              name: `name${page}`,
-              email: `email${i}@email.com`,
-            })
-          }
-          resolve(data)
-        }, Math.random() * 1000)
-      })
+    setTimeout(() => {
+      const data = []
+      for (let i = 0; i < size; i++) {
+        data.push({
+          index: (page - 1) * size + i + 1,
+          name: `name${page}`,
+          email: `email${i}@email.com`,
+        })
+      }
+      resolve(data)
+    }, Math.random() * 1000)
+  })
 }
 
 const virtualList = ref([] as any)
@@ -82,21 +77,34 @@ const onReload = () => {
 </script>
 <style>
 :root {
-    --containerHeight:30vh;
+  --containerHeight: 30vh;
 }
 .card {
-    padding:1rem;
-    box-size;color:#fff;
-}
-.te {
-    color: red;
+  padding: 1rem;
+  color: #fff;
 }
 .inner {
-    background:#3C3C3C;
-    border-radius: 20px;
-    padding: 0.5rem;
+  background: #3c3c3c;
+  border-radius: 20px;
+  padding: 0.5rem;
 }
 </style>
+
+```
+
+### vite 去除自定义标签警告
+
+```
+ plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          // 将所有带yy短横线的标签名都视为自定义元素
+          isCustomElement: (tag) => tag.includes('yy-virtual-list'),
+        },
+      },
+    }),
+  ],
 ```
 
 ## html
