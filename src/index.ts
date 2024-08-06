@@ -55,6 +55,7 @@ export class yyElement extends LitElement {
     if (data?.length === 0) {
       this.loading = false
       this.hasMoreData = false
+      this.init()
       return
     }
     this.listData.push(...data)
@@ -221,17 +222,20 @@ export class yyElement extends LitElement {
     }
   }
 
+  @state()
+  scrollTop = 0
+
   scrollEvent() {
     //当前滚动位置
-    const scrollTop = this.listRef.value.scrollTop
+    this.scrollTop = this.listRef.value.scrollTop
     //此时的开始索引
-    this.start = this.getStartIndex(scrollTop) || 0
+    this.start = this.getStartIndex(this.scrollTop) || 0
     //此时的结束索引
     this.end = this.start + this.visibleCount + this.buffer * 2
     this.changeVisibleData()
     //此时的偏移量
     this.setStartOffset()
-    this.handleRequestMore(scrollTop)
+    this.handleRequestMore(this.scrollTop)
   }
   updateItemsSize() {
     let nodes = this.contentRef.value!.children || []
