@@ -49,9 +49,12 @@ export class yyElement extends LitElement {
   listData = [] as any
 
   tipsRef = createRef<any>()
-  async loadDataList() {
+
+  async loadDataList(refresh = false) {
     this.loading = true
-    const data: any = await this.request(this.page, this.size)
+    const page = refresh ? 1 : this.page
+    const size = refresh ? this.page * this.size : this.size
+    const data: any = await this.request(page, size)
     if (data?.length === 0) {
       this.loading = false
       this.hasMoreData = false
@@ -107,7 +110,7 @@ export class yyElement extends LitElement {
   refresh() {
     // 刷新列表
     this.listData = []
-    this.loadDataList()
+    this.loadDataList(true)
   }
 
   reload() {
