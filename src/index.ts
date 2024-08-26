@@ -61,6 +61,7 @@ export class yyElement extends LitElement {
       this.init()
       return
     }
+    this.hasMoreData = true
     this.listData.push(...data)
     if (this.page === 1) {
       this.init()
@@ -115,7 +116,6 @@ export class yyElement extends LitElement {
 
   reload() {
     // 重新加载列表
-    this.hasMoreData = true
     this.positions = []
     this.listData = []
     this.page = 1
